@@ -2,10 +2,9 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <BaseBuildPath>$(SolutionDir)_build_\</BaseBuildPath>
-    <MSBuildProjectExtensionsPath>$(BaseBuildPath)_Extensions_\$(MSBuildProjectName)\</MSBuildProjectExtensionsPath>
-    <OutputPath>$(BaseBuildPath)$(Platform)_$(Configuration)\$(MSBuildProjectName)\</OutputPath>
+    <OutputPath>$(SolutionDir)_build_\$(Platform)_$(Configuration)\$(MSBuildProjectName)\</OutputPath>
     <IntermediateOutputPath>$(OutputPath)obj\</IntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(IntermediateOutputPath)</MSBuildProjectExtensionsPath>
   </PropertyGroup>
 
 </Project>

@@ -60,4 +60,10 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)..\_libs_\ExcelDna\ExcelDna.targets" />
+  <PropertyGroup>
+    <CleanDependsOn>
+      $(CleanDependsOn);
+      Restore
+    </CleanDependsOn>
+  </PropertyGroup>
 </Project>
