@@ -1,0 +1,4 @@
+<DnaLibrary Name="XLog" Language="C#" RuntimeVersion="v4.0">
+  <ExternalLibrary Path="XLog.dll" ComServer="true" Pack="true" />
+  <Reference Path="NLog.dll" Pack="true" />
+</DnaLibrary>
