@@ -14,6 +14,6 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCopyright("Copyright © 2020 Ittegrat")]
 [assembly: AssemblyTrademark("")]
 
-[assembly: AssemblyVersion("0.1.0")]
-[assembly: AssemblyFileVersion("0.1.0")]
-[assembly: AssemblyInformationalVersion("0.1.0")]
+[assembly: AssemblyVersion("0.2.0")]
+[assembly: AssemblyFileVersion("0.2.0")]
+[assembly: AssemblyInformationalVersion("0.2.0")]

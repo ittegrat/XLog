@@ -3,7 +3,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 
 using NLog;
-using NLog.Config;
+using NLog.Layouts;
 using NLog.Targets;
 
 namespace XLog
@@ -15,17 +15,11 @@ namespace XLog
   public interface IFileLogger
   {
 
-    bool ArchivalSet { get; }
+    // Logger properties and methods
     bool Initialized { get; }
-    string LogFile { get; }
-    string Suffix { get; }
+    string Name { get; }
 
     string Layout { get; set; }
-
-    void Initialize(string WbFullName, string BaseDir = "", string FileName = "", string LogSuffix = "", int Instance = 0);
-    void ArchivalByDate(string Every, string DateFormat, int MaxArchiveDays = 0, string ArchiveSuffix = "");
-    void ArchivalByNumber(string Numbering, int MaxArchiveFiles = 0, string ArchiveSuffix = "");
-    void SetLogLevels(string MinLevel, string MaxLevel = "");
 
     void Fatal(string message);
     void Error(string message);
@@ -34,227 +28,172 @@ namespace XLog
     void Debug(string message);
     void Trace(string message);
 
+    bool IsEnabled(string Level);
+    void SetLogLevels(string MinLevel, string MaxLevel = "");
+
+    // FileLogger properties and methods
+    bool ArchivalSet { get; }
+    string LogFile { get; }
+
+    void Initialize(string WbFullName, string Context = "", bool CreateNew = false, string MinLogLevel = "Info",
+      string LogDir = "", string LogFileName = "", string LogSuffix = "", bool NewFile = true
+    );
+    void ArchivalByDate(string Every, string DateFormat, int MaxArchiveDays = 0, string ArchiveSuffix = "", bool NewArchive = true);
+    void ArchivalByNumber(string Numbering, int MaxArchiveFiles = 0, string ArchiveSuffix = "");
+
   }
 
   [ComVisible(true)]
   [ClassInterface(ClassInterfaceType.None)]
   [ComDefaultInterface(typeof(IFileLogger))]
   [Guid("F8D842DC-48BB-4FBC-A73A-527A332A42CD")]
-  public class FileLogger : IFileLogger
+  public class FileLogger : LoggerBase, IFileLogger
   {
 
-    string fileName;
-    string loggerId;
-    Logger logger;
+    static readonly Logger ilogger = LogManager.GetCurrentClassLogger();
 
-    public bool ArchivalSet { get; private set; } = false;
-    public string Suffix { get; private set; } = Configuration.DefaultSuffix;
+    string logDir;
+    string logFileName;
+    string logSuffix = Configuration.FileLoggerLogSuffix;
+    FileTarget target;
 
-    public bool Initialized => logger != null;
-    public string LogFile {
-      get {
-        try {
-          return GetTarget().FileName.ToString();
-        }
-        catch (NotInitializedException) { return "<Not initialized>"; }
-      }
-    }
+    protected override string TargetLayout { get { return ((SimpleLayout)target.Layout).Text; } set { target.Layout = value; } }
 
-    public string Layout {
-      get {
-        try {
-          return GetTarget().Layout.ToString();
-        }
-        catch (NotInitializedException) { return "<Not initialized>"; }
-      }
-      set {
-        GetTarget().Layout = value;
-        LogManager.ReconfigExistingLoggers();
-      }
-    }
+    public bool ArchivalSet => target.ArchiveFileName != null;
+    public string LogFile => Initialized ? ((SimpleLayout)target.FileName).Text : NOT_INITIALIZED;
 
-    public void Initialize(string WbFullName, string BaseDir = "", string FileName = "", string LogSuffix = "", int Instance = 0) {
+    public void Initialize(string wbFullName, string context, bool createNew, string minLogLevel, string logDir, string logFileName, string logSuffix, bool newFile) {
 
       if (Initialized)
         throw new InvalidOperationException("Already initialized.");
 
-      if (String.IsNullOrWhiteSpace(WbFullName))
+      if (String.IsNullOrWhiteSpace(wbFullName))
         throw new ArgumentException("Invalid Workbook.FullName.");
+      wbFullName = wbFullName.Trim();
+      context = context?.Trim();
 
       try {
 
-        var config = LogManager.Configuration;
-        if (config == null) {
-          config = new LoggingConfiguration();
-          LogManager.Configuration = config;
-        }
+        var wbName = Path.GetFileName(wbFullName);
 
-        loggerId = Path.GetFileName(WbFullName) + (Instance > 0 ? $"_{Instance}" : String.Empty);
+        var config = GetConfig();
+        var loggerId = GetLoggerId(wbName, context);
 
-        if (config.FindRuleByName(loggerId) != null)
+        if (config.FindRuleByName(loggerId) != null) {
+
+          if (!createNew) {
+            target = config.FindTargetByName<FileTarget>(loggerId);
+            logger = LogManager.GetLogger(loggerId);
+            return;
+          }
+
           config.RemoveRuleByName(loggerId);
-
-        if (config.FindTargetByName(loggerId) != null)
           config.RemoveTarget(loggerId);
 
-        var bd = String.IsNullOrWhiteSpace(BaseDir)
-          ? (File.Exists(WbFullName) ? Path.GetDirectoryName(WbFullName) : Path.GetTempPath())
-          : BaseDir.Trim();
+        }
 
-        var fn = String.IsNullOrWhiteSpace(FileName)
-          ? loggerId
-          : FileName.Trim();
+        this.logDir = String.IsNullOrWhiteSpace(logDir)
+          ? (File.Exists(wbFullName) ? Path.GetDirectoryName(wbFullName) : Path.GetTempPath())
+          : logDir.Trim();
 
-        if (!String.IsNullOrWhiteSpace(LogSuffix))
-          Suffix = LogSuffix.Trim();
+        this.logFileName = String.IsNullOrWhiteSpace(logFileName)
+          ? wbName
+          : logFileName.Trim();
 
-        fileName = Path.Combine(bd, $"{fn}{Suffix}");
+        if (!String.IsNullOrWhiteSpace(logSuffix))
+          this.logSuffix = logSuffix.Trim();
 
-        var target = new FileTarget(loggerId) {
-          FileName = fileName,
-          Layout = Configuration.DefaultLayout,
-          DeleteOldFileOnStartup = Configuration.DeleteOldFileOnStartup,
+        target = new FileTarget(loggerId) {
+          FileName = Path.Combine(this.logDir, $"{this.logFileName}{this.logSuffix}"),
+          Layout = Configuration.FileLoggerLayout,
+          DeleteOldFileOnStartup = newFile,
           NetworkWrites = true
         };
 
-        var rule = new LoggingRule(loggerId, LogLevel.Info, target) {
-          RuleName = loggerId,
-          Final = true
-        };
-
-        lock (config.LoggingRules)
-          config.LoggingRules.Add(rule);
-
-        config.AddTarget(target);
-
-        LogManager.ReconfigExistingLoggers();
-
-        logger = LogManager.GetLogger(loggerId);
+        ConfigLogger(wbName, context, target, minLogLevel);
 
       }
       catch (Exception ex) {
+        ilogger.Error(ex, "Internal error");
         throw new InvalidOperationException(ex.Message);
       }
 
     }
-    public void ArchivalByDate(string Every, string DateFormat, int MaxArchiveDays = 0, string ArchiveSuffix = "") {
-
-      if (ArchivalSet)
-        throw new InvalidOperationException("Archival options already set.");
-
-      if (!Enum.TryParse<FileArchivePeriod>(Every.Trim(), out var every))
-        throw new ArgumentException($"Invalid ArchivePeriod '{Every}'.");
-
-      if (every == FileArchivePeriod.None)
-        throw new ArgumentException($"Unsupported ArchivePeriod '{every}'.");
-
-      if (String.IsNullOrWhiteSpace(DateFormat))
-        throw new ArgumentException("Invalid DateFormat.");
-
-      var target = GetTarget();
-
-      try {
-
-        if (String.IsNullOrWhiteSpace(ArchiveSuffix))
-          ArchiveSuffix = $".{{#}}{Suffix}";
-        else
-          ArchiveSuffix = ArchiveSuffix.Trim();
-
-        target.DeleteOldFileOnStartup = false;
-        target.ArchiveOldFileOnStartup = Configuration.ArchiveOldFileOnStartup;
-        target.ArchiveFileName = $"{fileName.Substring(0, fileName.Length - Suffix.Length)}{ArchiveSuffix}";
-        target.ArchiveNumbering = ArchiveNumberingMode.Date;
-        target.ArchiveEvery = every;
-        target.ArchiveDateFormat = DateFormat.Trim();
-        target.MaxArchiveDays = MaxArchiveDays;
-
-        LogManager.ReconfigExistingLoggers();
-
-        ArchivalSet = true;
-
-      }
-      catch (Exception ex) {
-        throw new InvalidOperationException(ex.Message);
-      }
-
-    }
-    public void ArchivalByNumber(string Numbering, int MaxArchiveFiles = 0, string ArchiveSuffix = "") {
-
-      if (ArchivalSet)
-        throw new InvalidOperationException("Archival options already set.");
-
-      if (!Enum.TryParse<ArchiveNumberingMode>(Numbering.Trim(), out var mode))
-        throw new ArgumentException($"Invalid NumberingMode '{Numbering}'.");
-
-      if ((mode != ArchiveNumberingMode.Rolling) && (mode != ArchiveNumberingMode.Sequence))
-        throw new ArgumentException($"Unsupported ArchiveNumbering '{mode}'.");
-
-      var target = GetTarget();
-
-      try {
-
-        if (String.IsNullOrWhiteSpace(ArchiveSuffix))
-          ArchiveSuffix = $"{Configuration.DefaultNumberSuffix}{Suffix}";
-        else
-          ArchiveSuffix = ArchiveSuffix.Trim();
-
-        target.DeleteOldFileOnStartup = false;
-        target.ArchiveOldFileOnStartup = true;
-        target.ArchiveFileName = $"{fileName.Substring(0, fileName.Length - Suffix.Length)}{ArchiveSuffix}";
-        target.ArchiveNumbering = mode;
-        target.MaxArchiveFiles = MaxArchiveFiles;
-
-        LogManager.ReconfigExistingLoggers();
-
-        ArchivalSet = true;
-
-      }
-      catch (Exception ex) {
-        throw new InvalidOperationException(ex.Message);
-      }
-
-    }
-    public void SetLogLevels(string MinLevel, string MaxLevel = "") {
-
-      if (!Initialized)
-        throw new InvalidOperationException("Not initialized.");
-
-      try {
-
-        var min = LogLevel.FromString(MinLevel);
-        var max = LogLevel.FromString(MaxLevel != String.Empty ? MaxLevel : MinLevel);
-
-        var config = LogManager.Configuration;
-        var rule = config.FindRuleByName(loggerId);
-        rule.DisableLoggingForLevels(LogLevel.Trace, LogLevel.Fatal);
-        rule.EnableLoggingForLevels(min, max);
-        LogManager.ReconfigExistingLoggers();
-
-      }
-      catch (Exception ex) {
-        throw new InvalidOperationException(ex.Message);
-      }
-
-    }
-
-    public void Fatal(string message) { logger?.Fatal(message); }
-    public void Error(string message) { logger?.Error(message); }
-    public void Warn(string message) { logger?.Warn(message); }
-    public void Info(string message) { logger?.Info(message); }
-    public void Debug(string message) { logger?.Debug(message); }
-    public void Trace(string message) { logger?.Trace(message); }
-
-    FileTarget GetTarget() {
+    public void ArchivalByDate(string every, string dateFormat, int maxArchiveDays, string archiveSuffix, bool newArchive) {
 
       if (!Initialized)
         throw new NotInitializedException();
 
-      var target = LogManager.Configuration.FindTargetByName<FileTarget>(loggerId);
+      if (ArchivalSet)
+        throw new InvalidOperationException("Archival options already set.");
 
-      if (target == null)
-        throw new InvalidOperationException("Null FileTarget.");
+      if (!Enum.TryParse<FileArchivePeriod>(every.Trim(), out var period))
+        throw new ArgumentException($"Invalid ArchivePeriod '{every}'.");
 
-      return target;
+      if (period == FileArchivePeriod.None)
+        throw new ArgumentException($"Unsupported ArchivePeriod '{period}'.");
+
+      if (String.IsNullOrWhiteSpace(dateFormat))
+        throw new ArgumentException("Invalid DateFormat.");
+
+      try {
+
+        if (String.IsNullOrWhiteSpace(archiveSuffix))
+          archiveSuffix = $".{{#}}{logSuffix}";
+        else
+          archiveSuffix = archiveSuffix.Trim();
+
+        target.DeleteOldFileOnStartup = false;
+        target.ArchiveOldFileOnStartup = newArchive;
+        target.ArchiveFileName = Path.Combine(logDir, $"{logFileName}{archiveSuffix}");
+        target.ArchiveNumbering = ArchiveNumberingMode.Date;
+        target.ArchiveEvery = period;
+        target.ArchiveDateFormat = dateFormat.Trim();
+        target.MaxArchiveDays = maxArchiveDays;
+
+        LogManager.ReconfigExistingLoggers();
+
+      }
+      catch (Exception ex) {
+        ilogger.Error(ex, "Internal error");
+        throw new InvalidOperationException(ex.Message);
+      }
+
+    }
+    public void ArchivalByNumber(string NumberingMode, int maxArchiveFiles, string archiveSuffix) {
+
+      if (!Initialized)
+        throw new NotInitializedException();
+
+      if (ArchivalSet)
+        throw new InvalidOperationException("Archival options already set.");
+
+      if (!Enum.TryParse<ArchiveNumberingMode>(NumberingMode.Trim(), out var mode))
+        throw new ArgumentException($"Invalid NumberingMode '{NumberingMode}'.");
+
+      if ((mode != ArchiveNumberingMode.Rolling) && (mode != ArchiveNumberingMode.Sequence))
+        throw new ArgumentException($"Unsupported ArchiveNumbering '{mode}'.");
+
+      try {
+
+        if (String.IsNullOrWhiteSpace(archiveSuffix))
+          archiveSuffix = $"{Configuration.FileLoggerNumberSuffix}{logSuffix}";
+        else
+          archiveSuffix = archiveSuffix.Trim();
+
+        target.DeleteOldFileOnStartup = false;
+        target.ArchiveOldFileOnStartup = true;
+        target.ArchiveFileName = Path.Combine(logDir, $"{logFileName}{archiveSuffix}");
+        target.ArchiveNumbering = mode;
+        target.MaxArchiveFiles = maxArchiveFiles;
+
+        LogManager.ReconfigExistingLoggers();
+
+      }
+      catch (Exception ex) {
+        ilogger.Error(ex, "Internal error");
+        throw new InvalidOperationException(ex.Message);
+      }
 
     }
 

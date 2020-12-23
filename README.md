@@ -1,1 +1,1 @@
-# XLog: a simple NLog logger for Microsoft Excel
+# XLog: a simple logger for Microsoft Excel based on NLog

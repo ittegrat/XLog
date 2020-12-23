@@ -41,8 +41,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Addin.cs" />
+    <Compile Include="Commands.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="FileLogger.cs" />
+    <Compile Include="DisplayLogger.cs" />
+    <Compile Include="LoggerBase.cs" />
     <Compile Include="NotInitializedException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -2,19 +2,21 @@ using System;
 using System.Collections;
 using System.Configuration;
 
+using NLog;
+
 namespace XLog
 {
   internal static class Configuration
   {
 
+    static readonly Logger ilogger = LogManager.GetCurrentClassLogger();
+
     const string CONFIG_SECTION = "XLog";
 
-    public static bool ArchiveOldFileOnStartup { get; }
-    public static bool DeleteOldFileOnStartup { get; }
-
-    public static string DefaultLayout { get; }
-    public static string DefaultNumberSuffix { get; }
-    public static string DefaultSuffix { get; }
+    public static string DisplayLoggerLayout { get; }
+    public static string FileLoggerLayout { get; }
+    public static string FileLoggerNumberSuffix { get; }
+    public static string FileLoggerLogSuffix { get; }
 
     static Configuration() {
       Hashtable section = null;
@@ -22,8 +24,8 @@ namespace XLog
         ConfigurationManager.RefreshSection(CONFIG_SECTION);
         section = (Hashtable)ConfigurationManager.GetSection(CONFIG_SECTION);
       }
-      catch (Exception) {
-        //** log error message
+      catch (Exception ex) {
+        ilogger.Error(ex, "Internal error");
       }
 
       T GetValue<T>(string key, T @default) {
@@ -32,12 +34,11 @@ namespace XLog
         return @default;
       }
 
-      ArchiveOldFileOnStartup = GetValue("archive.oldfiles", true);
-      DeleteOldFileOnStartup = GetValue("delete.oldfiles", true);
+      DisplayLoggerLayout = GetValue("displaylogger.layout", @"${date:format=H\:mm\:ss}|${level:uppercase=true}|${event-properties:WbName}${when:when='${event-properties:Context}'!='':inner=|${event-properties:Context}}|${message}");
 
-      DefaultLayout = GetValue("default.layout", "${longdate}|${level:uppercase=true}|${message}");
-      DefaultNumberSuffix = GetValue("default.number.suffix", ".{###}");
-      DefaultSuffix = GetValue("default.suffix", ".log");
+      FileLoggerLayout = GetValue("filelogger.layout", "${longdate}|${level:uppercase=true}|${when:when='${event-properties:Context}'!='':inner=|${event-properties:Context}}|${message}");
+      FileLoggerNumberSuffix = GetValue("filelogger.numbersuffix", ".{###}");
+      FileLoggerLogSuffix = GetValue("filelogger.logsuffix", ".log");
 
     }
 
