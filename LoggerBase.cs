@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text;
 
 using NLog;
@@ -15,9 +16,13 @@ namespace XLog
     protected const string NOT_INITIALIZED = "<Not initialized>";
 
     protected Logger logger;
+    protected LoggingRule rule;
 
     public bool Initialized => logger != null;
     public string Name => Initialized ? logger.Name : NOT_INITIALIZED;
+
+    public string MinLogLevel => Initialized ? (rule.Levels.Min() ?? LogLevel.Off).ToString() : NOT_INITIALIZED;
+    public string MaxLogLevel => Initialized ? (rule.Levels.Max() ?? LogLevel.Off).ToString() : NOT_INITIALIZED;
 
     protected abstract string TargetLayout { get; set; }
 
@@ -65,8 +70,6 @@ namespace XLog
         var min = LogLevel.FromString(MinLevel);
         var max = LogLevel.FromString(MaxLevel != String.Empty ? MaxLevel : MinLevel);
 
-        var config = LogManager.Configuration;
-        var rule = config.FindRuleByName(Name);
         rule.DisableLoggingForLevels(LogLevel.Trace, LogLevel.Fatal);
         rule.EnableLoggingForLevels(min, max);
         LogManager.ReconfigExistingLoggers();
@@ -79,15 +82,14 @@ namespace XLog
 
     }
 
-    protected void ConfigLogger(string wbName, string context, Target target, string minLogLevel) {
+    protected void ConfigLogger(string loggerId, string wbName, string context, Target target, string minLogLevel) {
 
       var config = GetConfig();
-      var loggerId = GetLoggerId(wbName, context);
 
       config.AddTarget(target);
 
       var logLevel = LogLevel.FromString(minLogLevel);
-      var rule = new LoggingRule(loggerId, logLevel, target) {
+      rule = new LoggingRule(loggerId, logLevel, target) {
         RuleName = loggerId,
         Final = true
       };
@@ -95,10 +97,7 @@ namespace XLog
       lock (config.LoggingRules)
         config.LoggingRules.Add(rule);
 
-      logger = LogManager.GetLogger(loggerId);
-      logger.SetProperty("WbName", wbName);
-      if (!String.IsNullOrEmpty(context))
-        logger.SetProperty("Context", context);
+      logger = GetLogger(loggerId, wbName, context);
 
       LogManager.ReconfigExistingLoggers();
 
@@ -118,6 +117,12 @@ namespace XLog
         sb.Append("::").Append(context);
       return sb.ToString();
     }
-
+    protected Logger GetLogger(string loggerId, string wbName, string context) {
+      var logger = LogManager.GetLogger(loggerId);
+      logger.SetProperty("WbName", wbName);
+      if (!String.IsNullOrEmpty(context))
+        logger.SetProperty("Context", context);
+      return logger;
+    }
   }
 }

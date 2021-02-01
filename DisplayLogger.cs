@@ -16,6 +16,8 @@ namespace XLog
 
     // Logger properties and methods
     bool Initialized { get; }
+    string MinLogLevel { get; }
+    string MaxLogLevel { get; }
     string Name { get; }
 
     string Layout { get; set; }
@@ -65,11 +67,12 @@ namespace XLog
         var config = GetConfig();
         var loggerId = GetLoggerId(wbName, context);
 
-        if (config.FindRuleByName(loggerId) != null) {
+        rule = config.FindRuleByName(loggerId);
+        if (rule != null) {
 
           if (!createNew) {
             mcp = ((MethodCallTarget)config.FindTargetByName(loggerId)).Parameters[0];
-            logger = LogManager.GetLogger(loggerId);
+            logger = GetLogger(loggerId, wbName, context);
             return;
           }
 
@@ -85,7 +88,7 @@ namespace XLog
         };
         mcp = target.Parameters[0];
 
-        ConfigLogger(wbName, context, target, minLogLevel);
+        ConfigLogger(loggerId, wbName, context, target, minLogLevel);
 
       }
       catch (Exception ex) {
