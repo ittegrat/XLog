@@ -2,9 +2,12 @@
 .vs/
 *.csproj.user
 
+# Generated files
+Properties/GeneratedInfo.cs
+
 # Build folder
 _build_/
 
 # Workbooks folder
 Workbooks/*
-!Workbooks/*.xls*
+!Workbooks/*.xls?
