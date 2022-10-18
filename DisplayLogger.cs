@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.InteropServices;
-
 using NLog;
 using NLog.Layouts;
 using NLog.Targets;
@@ -10,27 +9,28 @@ namespace XLog
 
   [ComVisible(true)]
   [InterfaceType(ComInterfaceType.InterfaceIsDual)]
-  [Guid("4A702E1D-38A7-45F7-AABB-993EF2834738")]
-  public interface IDisplayLogger
+  [Guid("BB985023-8FBE-46C8-ABC6-1519712167B7")]
+  public interface IDisplayLogger : ILogger
   {
 
     // Logger properties and methods
-    bool Initialized { get; }
-    string MinLogLevel { get; }
-    string MaxLogLevel { get; }
-    string Name { get; }
+    new bool Initialized { get; }
+    new bool IsClone { get; }
+    new string MinLogLevel { get; }
+    new string MaxLogLevel { get; }
+    new string Name { get; }
 
-    string Layout { get; set; }
+    new string Layout { get; set; }
 
-    void Fatal(string message);
-    void Error(string message);
-    void Warn(string message);
-    void Info(string message);
-    void Debug(string message);
-    void Trace(string message);
+    new void Fatal(string message);
+    new void Error(string message);
+    new void Warn(string message);
+    new void Info(string message);
+    new void Debug(string message);
+    new void Trace(string message);
 
-    bool IsEnabled(string Level);
-    void SetLogLevels(string MinLevel, string MaxLevel = "");
+    new bool IsEnabled(string Level);
+    new void SetLogLevels(string MinLevel, string MaxLevel = "");
 
     // DisplayLogger properties and methods
     void Initialize(string WbName, string Context = "", bool CreateNew = false, string MinLogLevel = "Info",
@@ -42,11 +42,11 @@ namespace XLog
   [ComVisible(true)]
   [ClassInterface(ClassInterfaceType.None)]
   [ComDefaultInterface(typeof(IDisplayLogger))]
-  [Guid("74710B8F-871B-44BD-942E-0CA5A5FD9221")]
-  public class DisplayLogger : LoggerBase, IDisplayLogger
+  [Guid("3CA9AE18-EFB2-4525-82B0-978F42DA0DF6")]
+  public class DisplayLogger : Logger, IDisplayLogger
   {
 
-    static readonly Logger ilogger = LogManager.GetCurrentClassLogger();
+    static readonly NLog.Logger ilogger = LogManager.GetCurrentClassLogger();
 
     MethodCallParameter mcp;
 
@@ -73,6 +73,7 @@ namespace XLog
           if (!createNew) {
             mcp = ((MethodCallTarget)config.FindTargetByName(loggerId)).Parameters[0];
             logger = GetLogger(loggerId, wbName, context);
+            IsClone = true;
             return;
           }
 

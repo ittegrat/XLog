@@ -9,7 +9,7 @@ namespace XLog
   internal static class Configuration
   {
 
-    static readonly Logger ilogger = LogManager.GetCurrentClassLogger();
+    static readonly NLog.Logger ilogger = LogManager.GetCurrentClassLogger();
 
     const string CONFIG_SECTION = "XLog";
 

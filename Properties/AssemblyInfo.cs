@@ -2,7 +2,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 
 [assembly: ComVisible(false)]
-[assembly: Guid("28BC02F6-102E-48A8-B936-2DD1ED848B6B")]
+[assembly: Guid("FC4FA398-DE0B-4EF9-905F-FF580D0B8A0E")]
 
 [assembly: AssemblyTitle("XLog")]
 [assembly: AssemblyDescription("NLog for Excel")]
@@ -10,6 +10,6 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyProduct("XLog")]
 [assembly: AssemblyCopyright("Copyright © 2020-2022 Ittegrat")]
 
-[assembly: AssemblyVersion("0.3.1")]
-[assembly: AssemblyFileVersion("0.3.1")]
-[assembly: AssemblyInformationalVersion("0.3.1")]
+[assembly: AssemblyVersion("0.4.0")]
+[assembly: AssemblyFileVersion("0.4.0")]
+[assembly: AssemblyInformationalVersion("0.4.0")]

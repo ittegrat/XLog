@@ -1,24 +1,57 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
-
 using NLog;
 using NLog.Config;
 using NLog.Targets;
 
 namespace XLog
 {
-  public abstract class LoggerBase
+
+  [ComVisible(true)]
+  [InterfaceType(ComInterfaceType.InterfaceIsDual)]
+  [Guid("CA497F3C-90F9-4A1F-A2D9-BAC0D412FC25")]
+  public interface ILogger
   {
 
-    static readonly Logger ilogger = LogManager.GetCurrentClassLogger();
+    bool Initialized { get; }
+    bool IsClone { get; }
+    string MinLogLevel { get; }
+    string MaxLogLevel { get; }
+    string Name { get; }
+
+    string Layout { get; set; }
+
+    void Fatal(string message);
+    void Error(string message);
+    void Warn(string message);
+    void Info(string message);
+    void Debug(string message);
+    void Trace(string message);
+
+    bool IsEnabled(string Level);
+    void SetLogLevels(string MinLevel, string MaxLevel = "");
+
+  }
+
+  [ComVisible(true)]
+  [ClassInterface(ClassInterfaceType.None)]
+  [ComDefaultInterface(typeof(ILogger))]
+  [Guid("30872E2C-678B-4870-B194-38301BB21D11")]
+  public abstract class Logger : ILogger
+  {
+
+    static readonly NLog.Logger ilogger = LogManager.GetCurrentClassLogger();
 
     protected const string NOT_INITIALIZED = "<Not initialized>";
 
-    protected Logger logger;
+    protected NLog.Logger logger;
     protected LoggingRule rule;
 
     public bool Initialized => logger != null;
+    public bool IsClone { get; protected set; } = false;
     public string Name => Initialized ? logger.Name : NOT_INITIALIZED;
 
     public string MinLogLevel => Initialized ? (rule.Levels.Min() ?? LogLevel.Off).ToString() : NOT_INITIALIZED;
@@ -117,12 +150,13 @@ namespace XLog
         sb.Append("::").Append(context);
       return sb.ToString();
     }
-    protected Logger GetLogger(string loggerId, string wbName, string context) {
-      var logger = LogManager.GetLogger(loggerId);
-      logger.SetProperty("WbName", wbName);
+    protected NLog.Logger GetLogger(string loggerId, string wbName, string context) {
+      var props = new Dictionary<string, object> { { "WbName", wbName } };
       if (!String.IsNullOrEmpty(context))
-        logger.SetProperty("Context", context);
-      return logger;
+        props.Add("Context", context);
+      return LogManager.GetLogger(loggerId).WithProperties(props);
     }
+
   }
+
 }

@@ -9,7 +9,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-     <GenerateTypeLib>true</GenerateTypeLib> 
+    <ExcelDnaBuild32>true</ExcelDnaBuild32>
+    <GenerateTypeLib>true</GenerateTypeLib>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,7 +25,7 @@
   <Import Project="$(SolutionDir)..\_libs_\ExcelDna\ExcelDna.targets" />
 
   <ItemGroup>
-    <PackageReference Include="NLog" Version="4.7.5" />
+    <PackageReference Include="NLog" Version="5.0.4" />
   </ItemGroup>
 
   <Target Name="GenerateInfo">

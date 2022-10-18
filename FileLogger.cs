@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
-
 using NLog;
 using NLog.Layouts;
 using NLog.Targets;
@@ -11,27 +10,28 @@ namespace XLog
 
   [ComVisible(true)]
   [InterfaceType(ComInterfaceType.InterfaceIsDual)]
-  [Guid("601B0F10-0E83-43E7-B5E4-251697C2032C")]
-  public interface IFileLogger
+  [Guid("F5E39EC0-9D7B-4C38-B9E1-B68133881971")]
+  public interface IFileLogger : ILogger
   {
 
     // Logger properties and methods
-    bool Initialized { get; }
-    string MinLogLevel { get; }
-    string MaxLogLevel { get; }
-    string Name { get; }
+    new bool Initialized { get; }
+    new bool IsClone { get; }
+    new string MinLogLevel { get; }
+    new string MaxLogLevel { get; }
+    new string Name { get; }
 
-    string Layout { get; set; }
+    new string Layout { get; set; }
 
-    void Fatal(string message);
-    void Error(string message);
-    void Warn(string message);
-    void Info(string message);
-    void Debug(string message);
-    void Trace(string message);
+    new void Fatal(string message);
+    new void Error(string message);
+    new void Warn(string message);
+    new void Info(string message);
+    new void Debug(string message);
+    new void Trace(string message);
 
-    bool IsEnabled(string Level);
-    void SetLogLevels(string MinLevel, string MaxLevel = "");
+    new bool IsEnabled(string Level);
+    new void SetLogLevels(string MinLevel, string MaxLevel = "");
 
     // FileLogger properties and methods
     bool ArchivalSet { get; }
@@ -48,11 +48,11 @@ namespace XLog
   [ComVisible(true)]
   [ClassInterface(ClassInterfaceType.None)]
   [ComDefaultInterface(typeof(IFileLogger))]
-  [Guid("F8D842DC-48BB-4FBC-A73A-527A332A42CD")]
-  public class FileLogger : LoggerBase, IFileLogger
+  [Guid("102731C9-D788-4A44-9C40-07439FEEAF2B")]
+  public class FileLogger : Logger, IFileLogger
   {
 
-    static readonly Logger ilogger = LogManager.GetCurrentClassLogger();
+    static readonly NLog.Logger ilogger = LogManager.GetCurrentClassLogger();
 
     string logDir;
     string logFileName;
@@ -61,7 +61,7 @@ namespace XLog
 
     protected override string TargetLayout { get { return ((SimpleLayout)target.Layout).Text; } set { target.Layout = value; } }
 
-    public bool ArchivalSet => target.ArchiveFileName != null;
+    public bool ArchivalSet => target?.ArchiveFileName != null;
     public string LogFile => Initialized ? ((SimpleLayout)target.FileName).Text : NOT_INITIALIZED;
 
     public void Initialize(string wbFullName, string context, bool createNew, string minLogLevel, string logDir, string logFileName, string logSuffix, bool newFile) {
@@ -87,6 +87,7 @@ namespace XLog
           if (!createNew) {
             target = config.FindTargetByName<FileTarget>(loggerId);
             logger = GetLogger(loggerId, wbName, context);
+            IsClone = true;
             return;
           }
 
