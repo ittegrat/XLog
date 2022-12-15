@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("XLog")]
 [assembly: AssemblyDescription("NLog for Excel")]
 
+[assembly: AssemblyCompany("Ittegrat")]
 [assembly: AssemblyProduct("XLog")]
 [assembly: AssemblyCopyright("Copyright © 2020-2022 Ittegrat")]
 
