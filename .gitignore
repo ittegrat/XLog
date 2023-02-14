@@ -2,9 +2,6 @@
 .vs/
 *.csproj.user
 
-# Generated files
-Properties/GeneratedInfo.cs
-
 # Build folder
 _build_/
 

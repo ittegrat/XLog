@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+
+  <Target Name="GenerateAssemblyAttributes" BeforeTargets="BeforeBuild">
+    <PropertyGroup>
+      <OutputFile>$(IntermediateOutputPath)GeneratedAssemblyAttributes.cs</OutputFile>
+    </PropertyGroup>
+    <ItemGroup>
+      <GeneratedAttribute Include="System.Reflection.AssemblyConfigurationAttribute">
+        <_Parameter1>$(Configuration)</_Parameter1>
+      </GeneratedAttribute>
+    </ItemGroup>
+    <WriteCodeFragment AssemblyAttributes="@(GeneratedAttribute)"
+                       Language="C#"
+                       OutputFile="$(OutputFile)"
+    />
+    <ItemGroup>
+      <Compile Remove="$(OutputFile)" />
+      <Compile Include="$(OutputFile)" />
+    </ItemGroup>
+  </Target>
+
+</Project>

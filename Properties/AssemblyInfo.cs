@@ -9,8 +9,8 @@ using System.Runtime.InteropServices;
 
 [assembly: AssemblyCompany("Ittegrat")]
 [assembly: AssemblyProduct("XLog")]
-[assembly: AssemblyCopyright("Copyright © 2020-2022 Ittegrat")]
+[assembly: AssemblyCopyright("Copyright © 2020-2023 Ittegrat")]
 
-[assembly: AssemblyVersion("0.4.0")]
-[assembly: AssemblyFileVersion("0.4.0")]
-[assembly: AssemblyInformationalVersion("0.4.0")]
+[assembly: AssemblyVersion("0.4.0.1")]
+[assembly: AssemblyFileVersion("0.4.0.1")]
+[assembly: AssemblyInformationalVersion("0.4.0.1")]

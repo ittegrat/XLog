@@ -5,40 +5,20 @@
   <PropertyGroup>
     <TargetFrameworks>net48</TargetFrameworks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
   </PropertyGroup>
 
   <PropertyGroup>
     <ExcelDnaBuild32>true</ExcelDnaBuild32>
     <GenerateTypeLib>true</GenerateTypeLib>
+    <DnaSuffix64>64</DnaSuffix64>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Include="Properties\GeneratedInfo.in" />
-    <None Include="Properties\launchSettings.json" />
-    <None Include="Workbooks\XLog.xlsm" />
-    <None Include="XLog.dna" />
-    <None Include="XLog.xll.config" />
-  </ItemGroup>
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <Import Project="$(SolutionDir)..\_libs_\ExcelDna\ExcelDna.targets" />
 
   <ItemGroup>
-    <PackageReference Include="NLog" Version="5.0.4" />
+    <PackageReference Include="NLog" Version="5.1.1" />
   </ItemGroup>
-
-  <Target Name="GenerateInfo">
-    <Exec WorkingDirectory="$(ProjectDir)\Properties" Command="powershell -command &quot;(Get-Content GeneratedInfo.in).replace('@CONFIGURATION@', '$(Configuration)') | Set-Content GeneratedInfo.cs&quot;" />
-    <ItemGroup>
-      <Compile Remove="Properties\GeneratedInfo.cs" />
-      <Compile Include="Properties\GeneratedInfo.cs" />
-    </ItemGroup>
-  </Target>
-
-  <PropertyGroup>
-    <BuildDependsOn>GenerateInfo;$(BuildDependsOn)</BuildDependsOn>
-  </PropertyGroup>
 
   <PropertyGroup>
     <CleanDependsOn>$(CleanDependsOn);Restore;</CleanDependsOn>

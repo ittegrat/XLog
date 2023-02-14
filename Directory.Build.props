@@ -1,10 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project>
+
   <PropertyGroup>
-    <DefaultItemExcludes>$(DefaultItemExcludes);$(SolutionDir)_build_/**</DefaultItemExcludes>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <BuildPath>$(SolutionDir)_build_\$(Platform)_$(Configuration)\</BuildPath>
-    <MSBuildProjectExtensionsPath>$(BuildPath)_nuget_\$(MSBuildProjectName)\</MSBuildProjectExtensionsPath>
-    <OutputPath>$(BuildPath)$(MSBuildProjectName)\</OutputPath>
+    <BuildRoot>$(SolutionDir)_build_\$(Platform)_$(Configuration)\</BuildRoot>
+    <OutputPath>$(BuildRoot)$(MSBuildProjectName)\</OutputPath>
     <IntermediateOutputPath>$(OutputPath)obj\</IntermediateOutputPath>
+    <BaseOutputPath>$(OutputPath)</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(IntermediateOutputPath)</BaseIntermediateOutputPath>
   </PropertyGroup>
+
 </Project>

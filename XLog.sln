@@ -1,17 +1,20 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30717.126
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XLog", "XLog.csproj", "{28BC02F6-102E-48A8-B936-2DD1ED848B6B}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Miscellanea", "Miscellanea", "{071900DC-4922-47CD-AD38-FDCE78808CC2}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MSBuild", "MSBuild", "{071900DC-4922-47CD-AD38-FDCE78808CC2}"
 	ProjectSection(SolutionItems) = preProject
-		.gitignore = .gitignore
 		Directory.Build.props = Directory.Build.props
-		LICENSE.md = LICENSE.md
-		README.md = README.md
+		Directory.Build.targets = Directory.Build.targets
 	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "XSDs (External)", "XSDs (External)", "{A12E67BD-805A-4B2A-8C04-2E9102D840E2}"
+	ProjectSection(SolutionItems) = preProject
+		..\_extlibs_\NLog\NLog.v511.xsd = ..\_extlibs_\NLog\NLog.v511.xsd
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XLog", "XLog.csproj", "{28BC02F6-102E-48A8-B936-2DD1ED848B6B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
