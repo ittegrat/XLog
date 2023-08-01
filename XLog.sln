@@ -14,7 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "XSDs (External)", "XSDs (Ex
 		..\_extlibs_\NLog\NLog.v511.xsd = ..\_extlibs_\NLog\NLog.v511.xsd
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XLog", "XLog.csproj", "{28BC02F6-102E-48A8-B936-2DD1ED848B6B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XLog", "XLog\XLog.csproj", "{28BC02F6-102E-48A8-B936-2DD1ED848B6B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
